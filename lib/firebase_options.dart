@@ -23,7 +23,7 @@ class DefaultFirebaseOptions {
       case TargetPlatform.android:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for ios - '
-              'you can reconfigure this by running the FlutterFire CLI again.',
+          'you can reconfigure this by running the FlutterFire CLI again.',
         );
       case TargetPlatform.iOS:
         throw UnsupportedError(
@@ -59,8 +59,5 @@ class DefaultFirebaseOptions {
       storageBucket: "tex-cost-pro.firebasestorage.app",
       messagingSenderId: "779552051496",
       appId: "1:779552051496:web:a951c193db105b8061001d",
-      measurementId: "G-6K5VHCKFLQ"
-  );
-
-
+      measurementId: "G-6K5VHCKFLQ");
 }
