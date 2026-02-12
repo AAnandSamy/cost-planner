@@ -19,8 +19,9 @@ class HomeScreen extends StatelessWidget {
               title: const Text(
                 'Tex Cost Pro',
                 style: TextStyle(
+                  color: Colors.white,
                   fontWeight: FontWeight.bold,
-                  shadows: [Shadow(blurRadius: 4, color: Colors.black38)],
+                  shadows: [Shadow(blurRadius: 2, color: Colors.black54, offset: Offset(1, 1))],
                 ),
               ),
               background: Container(
@@ -86,57 +87,36 @@ class _SimplifiedScaleSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
       children: [
-        _ScaleOptionCard(
+        _ScaleOptionChip(
           scale: IndustryScale.extraSmall,
           icon: Icons.person,
-          title: 'Individual / Home Business',
-          examples: 'Tailor, Etsy seller, Home crafter',
-          features: [
-            'Simple cost: Fabric + Labor',
-            'No overhead tracking',
-            'Quick estimation'
-          ],
+          title: 'Individual / Home',
+          subtitle: 'Tailor, Etsy seller',
           color: Colors.amber,
         ),
-        const SizedBox(height: 12),
-        _ScaleOptionCard(
+        _ScaleOptionChip(
           scale: IndustryScale.small,
           icon: Icons.store,
           title: 'Small Workshop',
-          examples: '1-10 workers, Local job work',
-          features: [
-            'Job-work rates',
-            'Basic overhead',
-            'Market-based pricing'
-          ],
+          subtitle: '1-10 workers',
           color: Colors.orange,
         ),
-        const SizedBox(height: 12),
-        _ScaleOptionCard(
+        _ScaleOptionChip(
           scale: IndustryScale.medium,
           icon: Icons.factory_outlined,
           title: 'Medium Factory',
-          examples: '10-100 workers, Multiple processes',
-          features: [
-            'BOM-based costing',
-            'Overhead % allocation',
-            'Process tracking'
-          ],
+          subtitle: '10-100 workers',
           color: Colors.green,
         ),
-        const SizedBox(height: 12),
-        _ScaleOptionCard(
+        _ScaleOptionChip(
           scale: IndustryScale.large,
           icon: Icons.business,
-          title: 'Large / Export Factory',
-          examples: '100+ workers, Export orders',
-          features: [
-            'Full BOM + Routing',
-            'Department overheads',
-            'Detailed SMV costing'
-          ],
+          title: 'Large / Export',
+          subtitle: '100+ workers',
           color: Colors.blue,
         ),
       ],
@@ -144,99 +124,64 @@ class _SimplifiedScaleSelector extends StatelessWidget {
   }
 }
 
-class _ScaleOptionCard extends StatelessWidget {
+class _ScaleOptionChip extends StatelessWidget {
   final IndustryScale scale;
   final IconData icon;
   final String title;
-  final String examples;
-  final List<String> features;
+  final String subtitle;
   final Color color;
 
-  const _ScaleOptionCard({
+  const _ScaleOptionChip({
     required this.scale,
     required this.icon,
     required this.title,
-    required this.examples,
-    required this.features,
+    required this.subtitle,
     required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(
+    return SizedBox(
+      width: (MediaQuery.of(context).size.width - 48) / 2, // 2 columns
+      child: Material(
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: color.withOpacity(0.3)),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ProductSelectionScreen(scale: scale),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProductSelectionScreen(scale: scale),
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, color: color.shade700, size: 32),
+                const SizedBox(height: 8),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: color.shade700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
+                ),
+              ],
             ),
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: color.shade700, size: 26),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: color.shade700,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      examples,
-                      style:
-                          TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 4,
-                      children: features
-                          .map((f) => Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: color.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  f,
-                                  style: TextStyle(
-                                      fontSize: 10, color: color.shade700),
-                                ),
-                              ))
-                          .toList(),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.chevron_right, color: Colors.grey.shade400),
-            ],
           ),
         ),
       ),
