@@ -1,0 +1,23 @@
+{
+  "flutter": {
+    "platforms": {
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "tex-cost-pro",
+          "configurations": {
+            "web": "1:779552051496:web:a951c193db105b8061001d"
+          }
+        }
+      }
+    }
+  },
+    "hosting": {
+    "source": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+
+  }
+}
