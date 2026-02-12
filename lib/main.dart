@@ -26,7 +26,7 @@ class TexCostProApp extends StatelessWidget {
           centerTitle: true,
           scrolledUnderElevation: 1,
         ),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 1,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
