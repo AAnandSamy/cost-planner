@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/cost_item.dart';
 import '../models/product_template.dart';
-import 'cost_result_screen.dart';
 
 class CostingCalculatorScreen extends StatefulWidget {
   final IndustryScale scale;
@@ -157,35 +156,6 @@ class _CostingCalculatorScreenState extends State<CostingCalculatorScreen> {
     });
   }
 
-  void _calculateAndShowResult() {
-    final items =
-        _costRows
-            .map(
-              (row) => CostItem(
-                name: row.name,
-                quantity: double.tryParse(row.quantityController.text) ?? 0,
-                unit: row.unit,
-                ratePerUnit: double.tryParse(row.rateController.text) ?? 0,
-              ),
-            )
-            .toList();
-
-    final result = CostResult(
-      productName: widget.product.name,
-      scale: widget.scale,
-      items: items,
-      wastagePercent: _wastagePercent,
-      overheadPercent: _overheadPercent,
-      profitPercent: _profitPercent,
-      quantity: int.tryParse(_quantityController.text) ?? 1,
-    );
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => CostResultScreen(result: result)),
-    );
-  }
-
   @override
   void dispose() {
     _quantityController.dispose();
@@ -201,16 +171,7 @@ class _CostingCalculatorScreenState extends State<CostingCalculatorScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(widget.product.name),
-            Text(
-              widget.scale.displayName,
-              style: TextStyle(fontSize: 12, color: scaleColor),
-            ),
-          ],
-        ),
+        title: Text(widget.product.name),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -250,28 +211,6 @@ class _CostingCalculatorScreenState extends State<CostingCalculatorScreen> {
 
               // Summary
               _buildSummaryCard(scaleColor),
-              const SizedBox(height: 24),
-
-              // Calculate Button
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton.icon(
-                  onPressed: _calculateAndShowResult,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: scaleColor,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  icon: const Icon(Icons.calculate),
-                  label: const Text(
-                    'Calculate & View Details',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
             ],
           ),
         ),
@@ -629,94 +568,235 @@ class _CostingCalculatorScreenState extends State<CostingCalculatorScreen> {
   }
 
   Widget _buildSummaryCard(Color scaleColor) {
+    final quantity = int.tryParse(_quantityController.text) ?? 1;
+
     return Card(
-      color: scaleColor.withOpacity(0.1),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(color: scaleColor.withOpacity(0.3)),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            const Text(
-              'Cost Summary',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      child: Column(
+        children: [
+          // Header
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: scaleColor.withOpacity(0.08),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(12),
+              ),
             ),
-            const SizedBox(height: 16),
-            _summaryRow('Subtotal', _subtotal),
-            _summaryRow(
-              '+ Wastage (${_wastagePercent.toStringAsFixed(1)}%)',
-              _wastageAmount,
-            ),
-            _summaryRow(
-              '+ Overhead (${_overheadPercent.toStringAsFixed(1)}%)',
-              _overheadAmount,
-            ),
-            _summaryRow(
-              '+ Profit (${_profitPercent.toStringAsFixed(1)}%)',
-              _profitAmount,
-            ),
-            const Divider(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Row(
               children: [
+                Icon(Icons.receipt_long, color: scaleColor, size: 22),
+                const SizedBox(width: 10),
                 const Text(
-                  'Total Cost',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  'Cost Summary',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                Text(
-                  '₹${_totalCost.toStringAsFixed(2)}',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: scaleColor,
+              ],
+            ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                // Base cost (Subtotal)
+                _summaryDetailRow(
+                  'Material & Labor',
+                  _subtotal,
+                  subtitle: 'Sum of all cost items above',
+                  icon: Icons.inventory_2_outlined,
+                  iconColor: Colors.blueGrey,
+                ),
+                const SizedBox(height: 14),
+
+                // Wastage
+                if (_wastagePercent > 0) ...[
+                  _summaryDetailRow(
+                    'Wastage',
+                    _wastageAmount,
+                    subtitle:
+                        '${_wastagePercent.toStringAsFixed(1)}% of subtotal',
+                    icon: Icons.delete_outline,
+                    iconColor: Colors.red.shade400,
+                    isAddition: true,
+                  ),
+                  const SizedBox(height: 14),
+                ],
+
+                // Overhead
+                if (_overheadPercent > 0) ...[
+                  _summaryDetailRow(
+                    'Overhead',
+                    _overheadAmount,
+                    subtitle:
+                        '${_overheadPercent.toStringAsFixed(1)}% of (subtotal + wastage)',
+                    icon: Icons.business_outlined,
+                    iconColor: Colors.purple.shade400,
+                    isAddition: true,
+                  ),
+                  const SizedBox(height: 14),
+                ],
+
+                // Profit
+                if (_profitPercent > 0) ...[
+                  _summaryDetailRow(
+                    'Profit Margin',
+                    _profitAmount,
+                    subtitle:
+                        '${_profitPercent.toStringAsFixed(1)}% of cost before profit',
+                    icon: Icons.trending_up,
+                    iconColor: Colors.green.shade600,
+                    isAddition: true,
+                  ),
+                  const SizedBox(height: 14),
+                ],
+
+                const Divider(height: 24, thickness: 1.5),
+
+                // Total Cost
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Total Order Cost',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        Text(
+                          'For $quantity pieces',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      '₹${_totalCost.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: scaleColor,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                // Per Piece highlight
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 20,
+                    horizontal: 16,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [scaleColor, scaleColor.withOpacity(0.85)],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Cost Per Piece',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'Your selling price reference',
+                            style: TextStyle(
+                              color: Colors.white54,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Text(
+                        '₹${_perPieceCost.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: scaleColor,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                children: [
-                  const Text(
-                    'Per Piece Cost',
-                    style: TextStyle(color: Colors.white70, fontSize: 12),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '₹${_perPieceCost.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _summaryRow(String label, double value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: TextStyle(color: Colors.grey.shade700)),
-          Text('₹${value.toStringAsFixed(2)}'),
-        ],
-      ),
+  Widget _summaryDetailRow(
+    String label,
+    double value, {
+    required String subtitle,
+    required IconData icon,
+    required Color iconColor,
+    bool isAddition = false,
+  }) {
+    return Row(
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: iconColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 18, color: iconColor),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+              Text(
+                subtitle,
+                style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+              ),
+            ],
+          ),
+        ),
+        Text(
+          '${isAddition ? '+ ' : ''}₹${value.toStringAsFixed(2)}',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 15,
+            color: isAddition ? iconColor : Colors.black87,
+          ),
+        ),
+      ],
     );
   }
 }
