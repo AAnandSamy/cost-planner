@@ -1,5 +1,5 @@
 # Tex Cost Pro for Home Textile
-Below is a **simple, universal, industry‑accepted costing logic** used across **Home Textiles**—and how it works differently for **large, medium, small, and extra-small** (individual) manufacturers..
+Below is a **simple, universal, industry‑accepted costing logic** used across **Home Textiles**—and how it works differently for **large, medium, small, and extra-small** (individual) manufacturers.
 
 I’ll explain:
 
